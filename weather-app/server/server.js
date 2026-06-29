@@ -39,16 +39,15 @@ app.get('/api/weather', ipRestriction, weatherLimiter, async (req, res) => {
   }
 
   try {
-    // axios instead of fetch — cleaner
+    // debug — see exact URL being called
+    console.log('Calling URL:', `http://api.weatherstack.com/current?access_key=${process.env.WEATHERSTACK_API_KEY}&query=${city}`)
+
+    // replaced params with manual URL
     const { data } = await axios.get(
-      'http://api.weatherstack.com/current',
-      {
-        params: {
-          access_key: process.env.WEATHERSTACK_API_KEY,
-          query: city
-        }
-      }
+      `http://api.weatherstack.com/current?access_key=${process.env.WEATHERSTACK_API_KEY}&query=${city}`
     )
+
+    console.log('Weatherstack response:', JSON.stringify(data))
 
     if (data.error) {
       return res.status(400).json({ error: data.error.info })
@@ -57,12 +56,7 @@ app.get('/api/weather', ipRestriction, weatherLimiter, async (req, res) => {
     res.json(data)
 
   } catch (error) {
-    // axios gives detailed error info
     console.error('Weatherstack error:', error.message)
     res.status(500).json({ error: 'Something went wrong' })
   }
-})
-
-app.listen(process.env.PORT, () => {
-  console.log(`Server running on port ${process.env.PORT}`)
 })
