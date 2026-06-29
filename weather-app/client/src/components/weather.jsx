@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import api from '../api/axiosInstance'
 
 const Weather = () => {
   const [city, setCity] = useState('')
@@ -17,20 +18,13 @@ const Weather = () => {
     setWeather(null)
 
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/weather?city=${city}`
-      )
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || 'Something went wrong')
-        return
-      }
-
+      // axios instance — clean, no base URL needed
+      const { data } = await api.get(`/api/weather?city=${city}`)
       setWeather(data)
 
     } catch (err) {
-      setError('Could not connect to server')
+      // error message from interceptor or axios
+      setError(err.message || 'Something went wrong')
     } finally {
       setLoading(false)
     }
@@ -43,13 +37,10 @@ const Weather = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-600 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-
-        {/* Title */}
         <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">
           Weather App 🌤️
         </h1>
 
-        {/* Search */}
         <div className="flex gap-2 mb-6">
           <input
             type="text"
@@ -67,25 +58,20 @@ const Weather = () => {
           </button>
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="text-center text-blue-600 font-medium">
             Fetching weather... ⏳
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div className="text-center text-red-500 font-medium bg-red-50 rounded-xl p-3">
             {error}
           </div>
         )}
 
-        {/* Weather Data */}
         {weather && (
           <div className="bg-blue-50 rounded-xl p-6 space-y-4">
-
-            {/* Location */}
             <div className="text-center">
               <h2 className="text-2xl font-bold text-blue-900">
                 {weather.location.name}
@@ -98,7 +84,6 @@ const Weather = () => {
               </p>
             </div>
 
-            {/* Temperature */}
             <div className="text-center">
               <span className="text-6xl font-bold text-blue-700">
                 {weather.current.temperature}°
@@ -109,7 +94,6 @@ const Weather = () => {
               </p>
             </div>
 
-            {/* Details Grid */}
             <div className="grid grid-cols-2 gap-3 mt-4">
               <div className="bg-white rounded-xl p-3 text-center shadow-sm">
                 <p className="text-gray-400 text-xs">Feels Like</p>
@@ -136,10 +120,8 @@ const Weather = () => {
                 </p>
               </div>
             </div>
-
           </div>
         )}
-
       </div>
     </div>
   )
