@@ -3,16 +3,47 @@ dotenv.config()
 
 import express from 'express'
 import cors from 'cors'
+import rateLimit from 'express-rate-limit'
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
 
-app.get('/api/weather', async (req, res) => {
+const weatherLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // max 10 requests per window
+  message: {
+    error: 'Too many requests — slow down! Try again after 15 minutes.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false
+})
+
+
+const allowedIPs = [
+  '127.0.0.1',   
+  '::1',         
+  
+]
+
+const ipRestriction = (req, res, next) => {
+  const userIP = req.ip || req.connection.remoteAddress
+
+  console.log('Request from IP:', userIP)
+
+  if (!allowedIPs.includes(userIP)) {
+    return res.status(403).json({
+      error: 'Access denied — your IP is not allowed'
+    })
+  }
+
+  next()
+}
+
+// Apply both middlewares to route
+app.get('/api/weather', ipRestriction, weatherLimiter, async (req, res) => {
   const { city } = req.query
-  console.log('City received:', city)
-  console.log('API Key exists:', !!process.env.WEATHERSTACK_API_KEY)
 
   if (!city) {
     return res.status(400).json({ error: 'City is required' })
