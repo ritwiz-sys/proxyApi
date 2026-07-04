@@ -13,7 +13,7 @@ app.use(express.json())
 
 const weatherLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 100,
   message: { error: 'Too many requests — try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false
@@ -22,7 +22,10 @@ const weatherLimiter = rateLimit({
 const allowedIPs = ['127.0.0.1', '::1']
 
 const ipRestriction = (req, res, next) => {
-  const userIP = req.ip || req.connection.remoteAddress
+  const rawIP = req.ip || req.connection.remoteAddress || ''
+  // Node listens dual-stack by default, so IPv4 clients show up as
+  // IPv4-mapped IPv6 addresses (e.g. ::ffff:127.0.0.1) — normalize before comparing
+  const userIP = rawIP.replace('::ffff:', '')
   console.log('Request from IP:', userIP)
 
   if (!allowedIPs.includes(userIP)) {
@@ -59,4 +62,9 @@ app.get('/api/weather', ipRestriction, weatherLimiter, async (req, res) => {
     console.error('Weatherstack error:', error.message)
     res.status(500).json({ error: 'Something went wrong' })
   }
+})
+
+const PORT = process.env.PORT || 5000
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
 })
