@@ -93,6 +93,13 @@ anything else is rethrown unchanged.
   Fix: use `mockRejectedValue` (no "Once") so every retry attempt still
   rejects. This generalizes — any mock for code under test that retries
   needs to account for every attempt, not just the first.
+- **That same retry also flakes the `waitFor` timeout, not just the mock.**
+  Even with `mockRejectedValue` fixed, the error only renders after the
+  retry's ~1s backoff delay plus the second failed attempt, which sits
+  right at (and sometimes past) `waitFor`'s default 1000ms timeout —
+  passing on some runs, timing out on others. Fixed by passing an explicit
+  `{ timeout: 5000 }` to the `waitFor` in the error-path test (and the
+  matching Storybook `ErrorState` story's `play` function).
 - **Mocking the wrapper vs. mocking the library gives two different
   kinds of test.** Mocking `../api/axiosInstance` in the component test
   treats the API client as a black box (good for testing the component's

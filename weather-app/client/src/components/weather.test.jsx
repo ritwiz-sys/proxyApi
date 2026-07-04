@@ -68,7 +68,13 @@ describe('Weather component', () => {
     await user.type(screen.getByPlaceholderText('Enter city name...'), 'Nowhere')
     await user.click(screen.getByRole('button', { name: /search/i }))
 
-    await waitFor(() => expect(screen.getByText('Access denied')).toBeInTheDocument())
+    // react-query's retry: 1 means a second attempt (with its ~1s backoff
+    // delay) happens before the error actually surfaces, so the default
+    // waitFor timeout (1000ms) is too tight and this can flake — give it
+    // more room.
+    await waitFor(() => expect(screen.getByText('Access denied')).toBeInTheDocument(), {
+      timeout: 5000
+    })
   })
 
   it('does not trigger a search for an empty city', async () => {
