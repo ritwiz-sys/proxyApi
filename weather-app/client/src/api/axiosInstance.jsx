@@ -4,14 +4,14 @@ const api = axios.create({
   baseURL: '/',
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 })
 
 // Response interceptor — handle errors globally
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
+  response => response,
+  error => {
     if (error.response?.status === 429) {
       throw new Error('Too many requests — slow down!')
     }

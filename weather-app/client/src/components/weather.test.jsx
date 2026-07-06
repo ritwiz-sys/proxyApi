@@ -6,12 +6,12 @@ import Weather from './weather'
 import api from '../api/axiosInstance'
 
 vi.mock('../api/axiosInstance', () => ({
-  default: { get: vi.fn() }
+  default: { get: vi.fn() },
 }))
 
-const renderWithClient = (ui) => {
+const renderWithClient = ui => {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } }
+    defaultOptions: { queries: { retry: false } },
   })
   return render(
     <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
@@ -26,23 +26,30 @@ describe('Weather component', () => {
   it('renders the search input and button', () => {
     renderWithClient(<Weather />)
 
-    expect(screen.getByPlaceholderText('Enter city name...')).toBeInTheDocument()
+    expect(
+      screen.getByPlaceholderText('Enter city name...')
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /search/i })).toBeInTheDocument()
   })
 
   it('fetches and displays weather data when searching a city', async () => {
     api.get.mockResolvedValueOnce({
       data: {
-        location: { name: 'London', region: 'City of London', country: 'UK', localtime: '2026-07-04 10:00' },
+        location: {
+          name: 'London',
+          region: 'City of London',
+          country: 'UK',
+          localtime: '2026-07-04 10:00',
+        },
         current: {
           temperature: 20,
           feelslike: 19,
           humidity: 60,
           wind_speed: 10,
           uv_index: 4,
-          weather_descriptions: ['Sunny']
-        }
-      }
+          weather_descriptions: ['Sunny'],
+        },
+      },
     })
 
     const user = userEvent.setup()
@@ -65,16 +72,22 @@ describe('Weather component', () => {
     const user = userEvent.setup()
     renderWithClient(<Weather />)
 
-    await user.type(screen.getByPlaceholderText('Enter city name...'), 'Nowhere')
+    await user.type(
+      screen.getByPlaceholderText('Enter city name...'),
+      'Nowhere'
+    )
     await user.click(screen.getByRole('button', { name: /search/i }))
 
     // react-query's retry: 1 means a second attempt (with its ~1s backoff
     // delay) happens before the error actually surfaces, so the default
     // waitFor timeout (1000ms) is too tight and this can flake — give it
     // more room.
-    await waitFor(() => expect(screen.getByText('Access denied')).toBeInTheDocument(), {
-      timeout: 5000
-    })
+    await waitFor(
+      () => expect(screen.getByText('Access denied')).toBeInTheDocument(),
+      {
+        timeout: 5000,
+      }
+    )
   })
 
   it('does not trigger a search for an empty city', async () => {

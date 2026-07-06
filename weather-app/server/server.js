@@ -13,10 +13,10 @@ app.use(express.json())
 
 const weatherLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 100
   message: { error: 'Too many requests — try again after 15 minutes.' },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 })
 
 const allowedIPs = ['127.0.0.1', '::1']
@@ -43,7 +43,10 @@ app.get('/api/weather', ipRestriction, weatherLimiter, async (req, res) => {
 
   try {
     // debug — see exact URL being called
-    console.log('Calling URL:', `http://api.weatherstack.com/current?access_key=${process.env.WEATHERSTACK_API_KEY}&query=${city}`)
+    console.log(
+      'Calling URL:',
+      `http://api.weatherstack.com/current?access_key=${process.env.WEATHERSTACK_API_KEY}&query=${city}`
+    )
 
     // replaced params with manual URL
     const { data } = await axios.get(
@@ -57,7 +60,6 @@ app.get('/api/weather', ipRestriction, weatherLimiter, async (req, res) => {
     }
 
     res.json(data)
-
   } catch (error) {
     console.error('Weatherstack error:', error.message)
     res.status(500).json({ error: 'Something went wrong' })

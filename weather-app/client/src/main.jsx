@@ -8,11 +8,11 @@ import App from './App.jsx'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2,              // retry failed requests 2 times
+      retry: 2, // retry failed requests 2 times
       staleTime: 1000 * 60 * 5, // cache data for 5 minutes
-      refetchOnWindowFocus: false // don't refetch when tab focused
-    }
-  }
+      refetchOnWindowFocus: false, // don't refetch when tab focused
+    },
+  },
 })
 
 createRoot(document.getElementById('root')).render(

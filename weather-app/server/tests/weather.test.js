@@ -2,7 +2,6 @@ import { test, expect } from '@playwright/test'
 
 // Group 1 — Happy path tests (things that SHOULD work)
 test.describe('Weather API — Happy Path', () => {
-
   test('should return weather data for valid city', async ({ request }) => {
     // make the actual API call
     const response = await request.get('/api/weather?city=London')
@@ -33,12 +32,10 @@ test.describe('Weather API — Happy Path', () => {
     expect(data.location).toHaveProperty('country')
     expect(data.location).toHaveProperty('localtime')
   })
-
 })
 
 // Group 2 — Error path tests (things that SHOULD fail)
 test.describe('Weather API — Error Handling', () => {
-
   test('should return 400 if city is missing', async ({ request }) => {
     const response = await request.get('/api/weather')
 
@@ -61,12 +58,10 @@ test.describe('Weather API — Error Handling', () => {
 
     console.log('✅ Correctly handled invalid city')
   })
-
 })
 
 // Group 3 — Rate limiting tests
 test.describe('Weather API — Rate Limiting', () => {
-
   test('should block after 10 requests in 15 minutes', async ({ request }) => {
     // make 11 requests rapidly
     let lastResponse
@@ -83,5 +78,4 @@ test.describe('Weather API — Rate Limiting', () => {
 
     console.log('✅ Rate limiting working correctly')
   })
-
 })

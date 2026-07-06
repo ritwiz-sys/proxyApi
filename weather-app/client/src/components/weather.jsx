@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import api from '../api/axiosInstance'
 
 // fetch function — outside component (important)
-const fetchWeather = async (city) => {
+const fetchWeather = async city => {
   const { data } = await api.get(`/api/weather?city=${city}`)
   return data
 }
@@ -14,11 +14,11 @@ const Weather = () => {
 
   // React Query handles everything
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['weather', searchCity],  // unique key per city
+    queryKey: ['weather', searchCity], // unique key per city
     queryFn: () => fetchWeather(searchCity),
-    enabled: !!searchCity,  // only fetch when searchCity is set
+    enabled: !!searchCity, // only fetch when searchCity is set
     staleTime: 1000 * 60 * 5, // cache for 5 mins
-    retry: 1
+    retry: 1,
   })
 
   const handleSearch = () => {
@@ -26,14 +26,13 @@ const Weather = () => {
     setSearchCity(city) // triggers the query
   }
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = e => {
     if (e.key === 'Enter') handleSearch()
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-600 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-
         <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">
           Weather App 🌤️
         </h1>
@@ -43,7 +42,7 @@ const Weather = () => {
           <input
             type="text"
             value={city}
-            onChange={(e) => setCity(e.target.value)}
+            onChange={e => setCity(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Enter city name..."
             className="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -73,7 +72,6 @@ const Weather = () => {
         {/* Weather Data — React Query provides this automatically */}
         {data && (
           <div className="bg-blue-50 rounded-xl p-6 space-y-4">
-
             <div className="text-center">
               <h2 className="text-2xl font-bold text-blue-900">
                 {data.location.name}
@@ -130,10 +128,8 @@ const Weather = () => {
             >
               🔄 Refresh
             </button>
-
           </div>
         )}
-
       </div>
     </div>
   )

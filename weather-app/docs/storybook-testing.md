@@ -189,9 +189,4 @@ npx vitest run           # runs unit tests + story tests headlessly
 1. Colocate `ComponentName.stories.jsx` next to the component.
 2. If the component needs any React context (query client, router,
    theme), add a `decorators` array in the story's default export rather
-   than duplicating providers per story.
-3. If the component fetches data only after user interaction, use a
-   `play` function to drive that interaction rather than trying to seed
-   initial `args`.
-4. Run `npx vitest run` before committing — a broken story now fails CI
-   the same way a broken unit test does.
+   
