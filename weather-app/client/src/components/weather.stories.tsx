@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { expect, userEvent, waitFor, within } from 'storybook/test'
-import Weather from './weather'
-import api from '../api/axiosInstance'
+import type { Decorator, Meta, StoryObj } from '@storybook/react-vite'
+import Weather, { type WeatherResponse } from './weather.tsx'
+import api from '../api/axiosInstance.ts'
 
 // Weather uses useQuery, so every story needs its own QueryClientProvider —
 // a shared client would leak cached results between stories.
-const withQueryClient = Story => {
+const withQueryClient: Decorator = (Story) => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
@@ -16,7 +17,7 @@ const withQueryClient = Story => {
   )
 }
 
-const sampleWeather = {
+const sampleWeather: WeatherResponse = {
   location: {
     name: 'London',
     region: 'City of London, Greater London',
@@ -33,19 +34,23 @@ const sampleWeather = {
   },
 }
 
-export default {
+const meta: Meta<typeof Weather> = {
   title: 'Weather',
   component: Weather,
   decorators: [withQueryClient],
   parameters: { layout: 'fullscreen' },
 }
 
-// No API mock needed — nothing has been searched yet.
-export const Empty = {}
+export default meta
 
-export const Loaded = {
+type Story = StoryObj<typeof Weather>
+
+// No API mock needed — nothing has been searched yet.
+export const Empty: Story = {}
+
+export const Loaded: Story = {
   play: async ({ canvasElement }) => {
-    api.get = async () => ({ data: sampleWeather })
+    api.get = (async () => ({ data: sampleWeather })) as typeof api.get
 
     const canvas = within(canvasElement)
     await userEvent.type(
@@ -59,11 +64,11 @@ export const Loaded = {
   },
 }
 
-export const ErrorState = {
+export const ErrorState: Story = {
   play: async ({ canvasElement }) => {
-    api.get = async () => {
+    api.get = (async () => {
       throw new Error('Access denied')
-    }
+    }) as typeof api.get
 
     const canvas = within(canvasElement)
     await userEvent.type(

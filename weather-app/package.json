@@ -14,15 +14,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "eslint": "^10.6.0",
     "husky": "^9.1.7",
-    "lint-staged": "^17.0.8"
+    "lint-staged": "^17.0.8",
+    "prettier": "^3.9.4"
   },
   "lint-staged": {
-    "client/src/**/*.{js,jsx}": [
+    "client/src/**/*.{js,jsx,ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ],
-    "server/**/*.js": [
+    "server/**/*.{js,ts}": [
       "eslint --fix",
       "prettier --write"
     ]

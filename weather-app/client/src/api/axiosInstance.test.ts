@@ -1,12 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-let errorHandler
+interface FakeAxiosError {
+  response?: { status: number }
+  code?: string
+}
+
+type ErrorHandler = (error: FakeAxiosError | Error) => unknown
+
+let errorHandler: ErrorHandler = () => undefined
 
 vi.mock('axios', () => {
   const instance = {
     interceptors: {
       response: {
-        use: vi.fn((_onSuccess, onError) => {
+        use: vi.fn((_onSuccess: unknown, onError: ErrorHandler) => {
           errorHandler = onError
         }),
       },
@@ -22,7 +29,7 @@ vi.mock('axios', () => {
 describe('axiosInstance error interceptor', () => {
   beforeEach(async () => {
     vi.resetModules()
-    await import('./axiosInstance')
+    await import('./axiosInstance.ts')
   })
 
   it('converts a 429 response into a rate limit message', () => {

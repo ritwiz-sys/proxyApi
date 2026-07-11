@@ -1,4 +1,5 @@
 import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooksPlugin from 'eslint-plugin-react-hooks'
 import prettierConfig from 'eslint-config-prettier'
@@ -10,15 +11,14 @@ export default [
       'node_modules/**',
       'dist/**',
       'storybook-static/**',
-      '.storybook/**',
       'playwright-report/**',
       'public/**',
-      'vite.config.js',
     ],
   },
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
-    files: ['src/**/*.{js,jsx}'],
+    files: ['src/**/*.{js,jsx,ts,tsx}', '.storybook/**/*.{js,ts,jsx,tsx}', 'vite.config.ts'],
     languageOptions: {
       globals: {
         console: 'readonly',
@@ -45,7 +45,8 @@ export default [
       'react/prop-types': 'off',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
-      'no-unused-vars': 'warn',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn',
       'no-console': 'warn',
       'prefer-const': 'error',
       'no-var': 'error',

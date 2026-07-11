@@ -2,14 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import Weather from './weather'
-import api from '../api/axiosInstance'
+import type { ReactNode } from 'react'
+import Weather from './weather.tsx'
+import api from '../api/axiosInstance.ts'
 
 vi.mock('../api/axiosInstance', () => ({
   default: { get: vi.fn() },
 }))
 
-const renderWithClient = ui => {
+const mockedGet = vi.mocked(api.get)
+
+const renderWithClient = (ui: ReactNode) => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
@@ -33,7 +36,7 @@ describe('Weather component', () => {
   })
 
   it('fetches and displays weather data when searching a city', async () => {
-    api.get.mockResolvedValueOnce({
+    mockedGet.mockResolvedValueOnce({
       data: {
         location: {
           name: 'London',
@@ -59,7 +62,7 @@ describe('Weather component', () => {
     await user.click(screen.getByRole('button', { name: /search/i }))
 
     await waitFor(() => expect(screen.getByText('London')).toBeInTheDocument())
-    expect(api.get).toHaveBeenCalledWith('/api/weather?city=London')
+    expect(mockedGet).toHaveBeenCalledWith('/api/weather?city=London')
     expect(screen.getByText('Sunny')).toBeInTheDocument()
     expect(screen.getByText('60%')).toBeInTheDocument()
   })
@@ -67,7 +70,7 @@ describe('Weather component', () => {
   it('shows an error message when the request fails', async () => {
     // mockRejectedValue (not "Once") — the component's useQuery has retry: 1,
     // so the mock must keep rejecting across the retry attempt too
-    api.get.mockRejectedValue(new Error('Access denied'))
+    mockedGet.mockRejectedValue(new Error('Access denied'))
 
     const user = userEvent.setup()
     renderWithClient(<Weather />)
@@ -96,6 +99,6 @@ describe('Weather component', () => {
 
     await user.click(screen.getByRole('button', { name: /search/i }))
 
-    expect(api.get).not.toHaveBeenCalled()
+    expect(mockedGet).not.toHaveBeenCalled()
   })
 })

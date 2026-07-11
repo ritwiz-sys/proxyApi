@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type APIResponse } from '@playwright/test'
 
 // Group 1 — Happy path tests (things that SHOULD work)
 test.describe('Weather API — Happy Path', () => {
@@ -64,16 +64,16 @@ test.describe('Weather API — Error Handling', () => {
 test.describe('Weather API — Rate Limiting', () => {
   test('should block after 10 requests in 15 minutes', async ({ request }) => {
     // make 11 requests rapidly
-    let lastResponse
+    let lastResponse: APIResponse | undefined
 
     for (let i = 0; i < 101; i++) {
       lastResponse = await request.get('/api/weather?city=London')
     }
 
     // 11th request should be blocked
-    expect(lastResponse.status()).toBe(429)
+    expect(lastResponse?.status()).toBe(429)
 
-    const data = await lastResponse.json()
+    const data = await lastResponse!.json()
     expect(data).toHaveProperty('error')
 
     console.log('✅ Rate limiting working correctly')

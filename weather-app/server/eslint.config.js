@@ -1,10 +1,12 @@
 import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
 
 export default [
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
-    files: ['**/*.js'],
-    ignores: ['node_modules/**', 'playwright-report/**'],
+    files: ['**/*.{js,ts}'],
+    ignores: ['node_modules/**', 'playwright-report/**', 'test-results/**'],
     languageOptions: {
       globals: {
         console: 'readonly',
@@ -14,7 +16,8 @@ export default [
       },
     },
     rules: {
-      'no-unused-vars': 'warn',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn',
       'no-console': 'off',
       'prefer-const': 'error',
       'no-var': 'error',

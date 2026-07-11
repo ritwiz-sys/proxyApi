@@ -6,6 +6,20 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "storybook", "--prefix", "weather-app/client"],
       "port": 6006
+    },
+    {
+      "name": "weather-server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start", "--prefix", "weather-app/server"],
+      "port": 5000,
+      "autoPort": false
+    },
+    {
+      "name": "weather-client",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "weather-app/client"],
+      "port": 5173,
+      "autoPort": false
     }
   ]
 }
