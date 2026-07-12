@@ -1,0 +1,5 @@
+[[redirects]]
+  from = "/api/*"
+  to = "https://proxyapi-9n0n.onrender.com/api/:splat"
+  status = 200
+  force = true
