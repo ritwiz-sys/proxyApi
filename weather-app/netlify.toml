@@ -1,3 +1,8 @@
+[build]
+  base = "weather-app/client"
+  command = "npm install --legacy-peer-deps && npm run build"
+  publish = "weather-app/client/dist"
+
 [[redirects]]
   from = "/api/*"
   to = "https://proxyapi-9n0n.onrender.com/api/:splat"
