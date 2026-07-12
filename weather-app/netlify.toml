@@ -1,10 +1,25 @@
 [build]
   base = "weather-app/client"
   command = "npm install --legacy-peer-deps && npm run build"
-  publish = "weather-app/client/dist"
+  publish = "dist"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Content-Type = "application/javascript"
+
+[[headers]]
+  for = "/*.mjs"
+  [headers.values]
+    Content-Type = "application/javascript"
 
 [[redirects]]
   from = "/api/*"
   to = "https://proxyapi-9n0n.onrender.com/api/:splat"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
