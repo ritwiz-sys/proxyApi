@@ -31,8 +31,8 @@ const citySearchLimiter = rateLimit({
 })
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
+  windowMs: 2 * 60 * 1000,
+  max: 2,
   message: { error: 'Too many attempts — try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false
