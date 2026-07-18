@@ -4,17 +4,19 @@ import tseslint from 'typescript-eslint'
 import prettierConfig from 'eslint-config-prettier'
 
 export default [
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
   {
-    files: ['src/**/*.{ts,tsx}'],
     ignores: [
       '**/node_modules/**',
       '**/dist/**',
       '**/storybook-static/**',
       '**/.storybook/**',
       '**/playwright-report/**'
-    ],
+    ]
+  },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    files: ['src/**/*.{ts,tsx}'],
     plugins: {
       'react-hooks': reactHooksPlugin
     },

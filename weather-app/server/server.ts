@@ -1,10 +1,13 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import './env.js'
 
 import express, { type Request, type Response, type NextFunction } from 'express'
 import cors from 'cors'
 import rateLimit from 'express-rate-limit'
 import axios from 'axios'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+import supabase from './lib/supabase.js'
+import { authenticate } from './middleware/auth.js'
 
 const app = express()
 
@@ -23,6 +26,14 @@ const citySearchLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
   message: { error: 'Too many requests — try again in a minute.' },
+  standardHeaders: true,
+  legacyHeaders: false
+})
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many attempts — try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false
 })
@@ -285,6 +296,217 @@ app.get('/api/weather/forecast', ipRestriction, weatherLimiter, async (req: Requ
     res.status(500).json({ error: 'Something went wrong' })
   }
 })
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+app.post('/api/auth/signup', ipRestriction, authLimiter, async (req: Request, res: Response) => {
+  const { email, username, password } = req.body as {
+    email?: string
+    username?: string
+    password?: string
+  }
+
+  if (!email || !username || !password) {
+    res.status(400).json({ error: 'Email, username, and password are required' })
+    return
+  }
+
+  if (!EMAIL_RE.test(email)) {
+    res.status(400).json({ error: 'Invalid email format' })
+    return
+  }
+
+  if (password.length < 6) {
+    res.status(400).json({ error: 'Password must be at least 6 characters' })
+    return
+  }
+
+  try {
+    const { data: existing } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (existing) {
+      res.status(409).json({ error: 'Email already registered' })
+      return
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .insert({ email, username, password: hashedPassword })
+      .select('id, email, username')
+      .single()
+
+    if (error || !user) {
+      console.error('Signup insert error:', error?.message)
+      res.status(500).json({ error: 'Something went wrong' })
+      return
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, username: user.username },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    )
+
+    res.status(201).json({ token, user })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Signup error:', message)
+    res.status(500).json({ error: 'Something went wrong' })
+  }
+})
+
+app.post('/api/auth/login', ipRestriction, authLimiter, async (req: Request, res: Response) => {
+  const { email, password } = req.body as { email?: string; password?: string }
+
+  if (!email || !password) {
+    res.status(400).json({ error: 'Email and password are required' })
+    return
+  }
+
+  try {
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, email, username, password')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' })
+      return
+    }
+
+    const passwordMatches = await bcrypt.compare(password, user.password)
+
+    if (!passwordMatches) {
+      res.status(401).json({ error: 'Invalid password' })
+      return
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, username: user.username },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    )
+
+    res.json({ token, user: { id: user.id, email: user.email, username: user.username } })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Login error:', message)
+    res.status(500).json({ error: 'Something went wrong' })
+  }
+})
+
+app.get('/api/auth/me', ipRestriction, authenticate, (req: Request, res: Response) => {
+  res.json(req.user)
+})
+
+app.get('/api/cities/favorites', ipRestriction, authenticate, async (req: Request, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from('favorite_cities')
+      .select('id, city_name, country, lat, lon, added_at')
+      .eq('user_id', req.user!.id)
+      .order('added_at', { ascending: true })
+
+    if (error) {
+      console.error('Fetch favorites error:', error.message)
+      res.status(500).json({ error: 'Something went wrong' })
+      return
+    }
+
+    res.json(data)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Fetch favorites error:', message)
+    res.status(500).json({ error: 'Something went wrong' })
+  }
+})
+
+app.post('/api/cities/favorites', ipRestriction, authenticate, async (req: Request, res: Response) => {
+  const { city_name, country, lat, lon } = req.body as {
+    city_name?: string
+    country?: string
+    lat?: number
+    lon?: number
+  }
+
+  if (!city_name || !country || typeof lat !== 'number' || typeof lon !== 'number') {
+    res.status(400).json({ error: 'city_name, country, lat, and lon are required' })
+    return
+  }
+
+  try {
+    const { data: existing } = await supabase
+      .from('favorite_cities')
+      .select('id')
+      .eq('user_id', req.user!.id)
+      .eq('lat', lat)
+      .eq('lon', lon)
+      .maybeSingle()
+
+    if (existing) {
+      res.status(409).json({ error: 'City already in favorites' })
+      return
+    }
+
+    const { data: city, error } = await supabase
+      .from('favorite_cities')
+      .insert({ user_id: req.user!.id, city_name, country, lat, lon })
+      .select('id, city_name, country, lat, lon, added_at')
+      .single()
+
+    if (error || !city) {
+      console.error('Add favorite error:', error?.message)
+      res.status(500).json({ error: 'Something went wrong' })
+      return
+    }
+
+    res.status(201).json(city)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    console.error('Add favorite error:', message)
+    res.status(500).json({ error: 'Something went wrong' })
+  }
+})
+
+app.delete(
+  '/api/cities/favorites/:id',
+  ipRestriction,
+  authenticate,
+  async (req: Request, res: Response) => {
+    try {
+      const { data, error } = await supabase
+        .from('favorite_cities')
+        .delete()
+        .eq('id', req.params.id)
+        .eq('user_id', req.user!.id)
+        .select('id')
+
+      if (error) {
+        console.error('Remove favorite error:', error.message)
+        res.status(500).json({ error: 'Something went wrong' })
+        return
+      }
+
+      if (!data || data.length === 0) {
+        res.status(404).json({ error: 'City not found' })
+        return
+      }
+
+      res.json({ success: true })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      console.error('Remove favorite error:', message)
+      res.status(500).json({ error: 'Something went wrong' })
+    }
+  }
+)
 
 const PORT = Number(process.env.PORT) || 5000
 app.listen(PORT, () => {
