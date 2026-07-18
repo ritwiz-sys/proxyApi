@@ -42,20 +42,32 @@ day-bucketing server-side so the client never touches the raw 3-hour list.
 
 ```
 client/src/
-├── types.ts                    # City, CitySearchResult, CurrentWeather, ForecastDay
+├── types.ts                    # City, CitySearchResult, CurrentWeather, ForecastDay, AuthUser, FavoriteCity
 ├── hooks/
-│   ├── useCities.ts             # localStorage-backed city list
+│   ├── useFavoriteCities.ts     # DB-backed when authed, localStorage fallback otherwise
+│   ├── useAuth.ts               # signup/login/logout, JWT verification on load
 │   ├── useDebounce.ts           # generic debounce hook
 │   └── useUnit.ts               # localStorage-backed °C/°F preference
 ├── utils/
-│   └── temperature.ts           # celsiusTo / formatTemp — display-time conversion only
+│   ├── temperature.ts           # celsiusTo / formatTemp — display-time conversion only
+│   └── city.ts                  # toCityId — shared by SearchBar and useFavoriteCities
 ├── components/
 │   ├── SearchBar.tsx            # debounced city search + add
 │   ├── CityCard.tsx             # current + forecast for one city
 │   ├── ComparisonTable.tsx      # side-by-side table, 2+ cities
-│   ├── Dashboard.tsx            # page shell — search, grid, table, empty state
+│   ├── Dashboard.tsx            # page shell — search, grid, table, empty state, auth UI
+│   ├── AuthModal.tsx            # login/signup modal
+│   ├── UserMenu.tsx             # username + logout, shown when authenticated
 │   └── weather.tsx              # unchanged — old single-city lookup
 ```
+
+Accounts, JWTs, and the DB-backed favorites list are covered in their own
+doc — see [JWT_AUTH_GUIDE.md](JWT_AUTH_GUIDE.md) — since that's a
+substantial feature on its own. `useCities.ts` (described below in its
+original localStorage-only form) no longer exists as a separate file: its
+entire behavior was folded into `useFavoriteCities.ts`'s unauthenticated
+branch, so unauthenticated visitors get the exact same experience as
+before, with no separate hook to maintain.
 
 Everything is `.tsx`/`.ts` to match the rest of the client, which had already
 migrated off `.jsx` before this feature (see
@@ -63,15 +75,21 @@ migrated off `.jsx` before this feature (see
 written against `.jsx` filenames, adapted here to fit the codebase as it
 actually exists.
 
-### `useCities` / localStorage
+### `useFavoriteCities` / localStorage
 
 Key: `dashboard_cities`. Stores only `{ id, name, country, lat, lon,
 addedAt }` — never weather data, which is always fetched fresh per the spec.
 `id` is derived as `${name}-${country}`.toLowerCase().replace(/\s+/g, '-')`
-(exported as `toCityId` from `SearchBar.tsx`) so duplicate detection doesn't
-need a round-trip. `addCity` returns `false` without mutating state if the
-id already exists, which `SearchBar` uses to trigger the "already added"
-toast instead of silently no-oping.
+(`toCityId`, in `utils/city.ts`) so duplicate detection doesn't need a
+round-trip. `addCity` resolves to `false` without mutating state if the id
+already exists, which `SearchBar` uses to trigger the "already added" toast
+instead of silently no-oping.
+
+This is the *unauthenticated* branch of `useFavoriteCities` — once a user
+logs in, the same hook switches to fetching/writing through
+`/api/cities/favorites` instead, and migrates whatever was in localStorage
+into the database exactly once. See [JWT_AUTH_GUIDE.md](JWT_AUTH_GUIDE.md#10-migration-logic--localstorage-to-database)
+for the full mechanics.
 
 ### `SearchBar`
 

@@ -29,6 +29,11 @@ export default defineConfig({
           // use describe, test, expect globally
           environment: 'jsdom',
           // fake browser environment
+          environmentOptions: {
+            // jsdom treats the default about:blank as an opaque origin and
+            // refuses to back localStorage/sessionStorage without a real URL
+            jsdom: { url: 'http://localhost:3000' },
+          },
           setupFiles: './src/tests/setup.ts', // runs before every test
         },
       },

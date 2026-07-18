@@ -2,15 +2,13 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import api from '../api/axiosInstance.ts'
 import { useDebounce } from '../hooks/useDebounce.ts'
+import { toCityId } from '../utils/city.ts'
 import type { City, CitySearchResult } from '../types.ts'
 
 interface SearchBarProps {
   cities: City[]
-  onAddCity: (city: City) => boolean
+  onAddCity: (city: City) => boolean | Promise<boolean>
 }
-
-export const toCityId = (name: string, country: string) =>
-  `${name}-${country}`.toLowerCase().replace(/\s+/g, '-')
 
 const fetchCitySuggestions = async (query: string): Promise<CitySearchResult[]> => {
   const { data } = await api.get<CitySearchResult[]>(
@@ -55,7 +53,7 @@ const SearchBar = ({ cities, onAddCity }: SearchBarProps) => {
     setIsOpen(true)
   }
 
-  const handleSelect = (result: CitySearchResult) => {
+  const handleSelect = async (result: CitySearchResult) => {
     const city: City = {
       id: toCityId(result.name, result.country),
       name: result.name,
@@ -65,12 +63,13 @@ const SearchBar = ({ cities, onAddCity }: SearchBarProps) => {
       addedAt: Date.now(),
     }
 
-    const added = onAddCity(city)
+    setQuery('')
+    setIsOpen(false)
+
+    const added = await onAddCity(city)
     if (!added) {
       setToast(`${city.name} is already added`)
     }
-    setQuery('')
-    setIsOpen(false)
   }
 
   return (

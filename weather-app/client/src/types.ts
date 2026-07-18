@@ -45,3 +45,18 @@ export interface ForecastDay {
   icon: string
   description: string
 }
+
+export interface AuthUser {
+  id: string
+  email: string
+  username: string
+}
+
+export interface FavoriteCity {
+  id: string
+  city_name: string
+  country: string
+  lat: number
+  lon: number
+  added_at: string
+}
