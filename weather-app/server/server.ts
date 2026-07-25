@@ -8,11 +8,17 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import supabase from './lib/supabase.js'
 import { authenticate } from './middleware/auth.js'
+import './cron/checkAlerts.js'
+import alertRoutes from './routes/alerts.js'
+
+
+
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
+app.use('/api/alerts', alertRoutes)
 
 const weatherLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -32,7 +38,7 @@ const citySearchLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
-  max: 2,
+  max: 10,
   message: { error: 'Too many attempts — try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false
@@ -511,4 +517,11 @@ app.delete(
 const PORT = Number(process.env.PORT) || 5000
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
+})
+
+// TEMPORARY — for testing only
+app.get('/api/test-cron', async (req, res) => {
+  const { checkAlerts } = await import('./cron/checkAlerts.js')
+  await checkAlerts()
+  res.json({ success: true })
 })

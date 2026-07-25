@@ -61,18 +61,18 @@ const CityCard = ({ city, onRemove, unit }: CityCardProps) => {
   const isError = currentQuery.isError || forecastQuery.isError
 
   return (
-    <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-5 shadow-lg transition hover:-translate-y-0.5 hover:border-slate-600 hover:shadow-xl">
-      <div className="mb-4 flex items-start justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-100">{city.name}</h3>
+    <div className="rounded-2xl border border-slate-700 bg-slate-800/60 p-4 shadow-lg transition hover:-translate-y-0.5 hover:border-slate-600 hover:shadow-xl sm:p-5">
+      <div className="mb-4 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="truncate text-lg font-semibold text-slate-100">{city.name}</h3>
           <p className="text-sm text-slate-400">{city.country}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex shrink-0 gap-2">
           <button
             type="button"
             onClick={handleRefresh}
             title="Refresh"
-            className="rounded-lg border border-slate-600 p-2 text-slate-300 transition hover:bg-slate-700"
+            className="rounded-lg border border-slate-600 p-2.5 text-slate-300 transition hover:bg-slate-700 sm:p-2"
           >
             🔄
           </button>
@@ -80,7 +80,7 @@ const CityCard = ({ city, onRemove, unit }: CityCardProps) => {
             type="button"
             onClick={() => onRemove(city.id)}
             title="Remove"
-            className="rounded-lg border border-slate-600 p-2 text-slate-300 transition hover:bg-red-900/50 hover:text-red-300"
+            className="rounded-lg border border-slate-600 p-2.5 text-slate-300 transition hover:bg-red-900/50 hover:text-red-300 sm:p-2"
           >
             ✕
           </button>
