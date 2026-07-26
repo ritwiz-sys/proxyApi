@@ -7,7 +7,8 @@ import axios from 'axios'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import supabase from './lib/supabase.js'
-import { authenticate } from '.
+import { authenticate } from './middleware/auth.js'
+import './cron/checkAlerts.js'
 import alertRoutes from './routes/alerts.js'
 
 const app = express()
