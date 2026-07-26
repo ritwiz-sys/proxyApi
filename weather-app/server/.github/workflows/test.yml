@@ -1,0 +1,48 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test-client:
+    name: Vitest Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: weather-app/client/package-lock.json
+
+      - name: Install dependencies
+        run: cd weather-app/client && npm install --legacy-peer-deps
+
+      - name: Run Vitest tests
+        run: cd weather-app/client && npm run test:run
+
+  typecheck-server:
+    name: TypeScript Check (Server)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: cd weather-app/server && npm install
+
+      - name: TypeScript check
+        run: cd weather-app/server && npx tsc --noEmit
