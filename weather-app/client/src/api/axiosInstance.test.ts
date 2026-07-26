@@ -1,16 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 
-interface FakeAxiosError {
-  response?: { status: number }
-  code?: string
-}
-
-interface FakeRequestConfig {
-  headers: Record<string, string>
-}
-
-type ErrorHandler = (error: FakeAxiosError | Error) => unknown
-type RequestHandler = (config: FakeRequestConfig) => FakeRequestConfig
+type ErrorHandler = (error: unknown) => unknown
+type RequestHandler = (config: Record<string, unknown>) => Record<string, unknown>
 
 let errorHandler: ErrorHandler = () => undefined
 let requestHandler: RequestHandler = (config) => config
@@ -41,25 +32,27 @@ describe('axiosInstance error interceptor', () => {
   beforeEach(async () => {
     vi.resetModules()
     localStorage.clear()
-    await import('./axiosInstance.ts')
+    // re-import to re-register interceptors
+    const mod = await import('../api/axiosInstance.ts')
+    return mod
   })
 
   it('converts a 429 response into a rate limit message', () => {
-    expect(() => errorHandler({ response: { status: 429 } })).toThrowError(
-      'Too many requests — slow down!'
-    )
+    expect(() =>
+      errorHandler({ response: { status: 429 } })
+    ).toThrow('Too many requests — slow down!')
   })
 
   it('converts a 403 response into an access denied message', () => {
-    expect(() => errorHandler({ response: { status: 403 } })).toThrowError(
-      'Access denied'
-    )
+    expect(() =>
+      errorHandler({ response: { status: 403 } })
+    ).toThrow('Access denied')
   })
 
   it('converts a connection timeout into a timeout message', () => {
-    expect(() => errorHandler({ code: 'ECONNABORTED' })).toThrowError(
-      'Request timed out'
-    )
+    expect(() =>
+      errorHandler({ code: 'ECONNABORTED' })
+    ).toThrow('Request timed out')
   })
 
   it('rethrows unrecognized errors unchanged', () => {
@@ -72,17 +65,17 @@ describe('axiosInstance request interceptor', () => {
   beforeEach(async () => {
     vi.resetModules()
     localStorage.clear()
-    await import('./axiosInstance.ts')
+    await import('../api/axiosInstance.ts')
   })
 
   it('attaches the stored JWT as a Bearer token', () => {
     localStorage.setItem('weather_auth_token', 'abc123')
-    const config = requestHandler({ headers: {} })
-    expect(config.headers.Authorization).toBe('Bearer abc123')
+    const config = requestHandler({ headers: {} as Record<string, string> })
+    expect((config.headers as Record<string, string>).Authorization).toBe('Bearer abc123')
   })
 
   it('leaves requests unauthenticated when no token is stored', () => {
-    const config = requestHandler({ headers: {} })
-    expect(config.headers.Authorization).toBeUndefined()
+    const config = requestHandler({ headers: {} as Record<string, string> })
+    expect((config.headers as Record<string, string>).Authorization).toBeUndefined()
   })
 })
