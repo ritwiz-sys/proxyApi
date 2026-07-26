@@ -3,12 +3,9 @@ import axios from 'axios'
 import supabase from '../lib/supabase.js'
 import { sendAlertEmail } from '../lib/mailer.js'
 
-
-
-cron.schedule('*/30 * * * *', async () => {
+export const checkAlerts = async () => {
   console.log('Checking alerts...')
 
-  // Step 1 — fetch all active alerts with user email
   const { data: alerts, error } = await supabase
     .from('alerts')
     .select('*, users(email)')
@@ -16,10 +13,8 @@ cron.schedule('*/30 * * * *', async () => {
 
   if (error || !alerts) return
 
-  // Step 2 — check each alert
   for (const alert of alerts) {
     try {
-      // fetch weather
       const { data: weather } = await axios.get(
         'https://api.openweathermap.org/data/2.5/weather',
         {
@@ -32,7 +27,6 @@ cron.schedule('*/30 * * * *', async () => {
         }
       )
 
-      // fetch AQI
       const { data: airData } = await axios.get(
         'https://api.openweathermap.org/data/2.5/air_pollution',
         {
@@ -44,13 +38,11 @@ cron.schedule('*/30 * * * *', async () => {
         }
       )
 
-      // extract values
       const currentTemp = weather.main.temp
       const currentHumidity = weather.main.humidity
       const currentWind = weather.wind.speed
       const currentAqi = airData.list[0].main.aqi
 
-      // Step 3 — check conditions
       let triggered = false
       let condition = ''
       let value = 0
@@ -85,7 +77,6 @@ cron.schedule('*/30 * * * *', async () => {
         value = currentAqi
       }
 
-      // Step 4 — send email if triggered
       if (triggered) {
         await sendAlertEmail(
           alert.users.email,
@@ -94,13 +85,11 @@ cron.schedule('*/30 * * * *', async () => {
           value
         )
 
-        // Step 5 — update is_triggered in DB
         await supabase
           .from('alerts')
           .update({ is_triggered: true, last_checked: new Date().toISOString() })
           .eq('id', alert.id)
       } else {
-        // update last_checked even if not triggered
         await supabase
           .from('alerts')
           .update({ last_checked: new Date().toISOString() })
@@ -113,4 +102,7 @@ cron.schedule('*/30 * * * *', async () => {
   }
 
   console.log('Alert check complete ✅')
-})
+}
+
+// Start cron job
+cron.schedule('*/30 * * * *', checkAlerts)

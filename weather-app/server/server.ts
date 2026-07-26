@@ -7,12 +7,8 @@ import axios from 'axios'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import supabase from './lib/supabase.js'
-import { authenticate } from './middleware/auth.js'
-import './cron/checkAlerts.js'
+import { authenticate } from '.
 import alertRoutes from './routes/alerts.js'
-
-
-
 
 const app = express()
 
@@ -48,8 +44,6 @@ const allowedIPs = ['127.0.0.1', '::1']
 
 const ipRestriction = (req: Request, res: Response, next: NextFunction) => {
   const rawIP = req.ip || req.socket.remoteAddress || ''
-  // Node listens dual-stack by default, so IPv4 clients show up as
-  // IPv4-mapped IPv6 addresses (e.g. ::ffff:127.0.0.1) — normalize before comparing
   const userIP = rawIP.replace('::ffff:', '')
   console.log('Request from IP:', userIP)
 
@@ -96,15 +90,9 @@ app.get('/api/weather', ipRestriction, weatherLimiter, async (req: Request, res:
   }
 
   try {
-    // debug — see exact URL being called
-    console.log('Calling URL:', `http://api.weatherstack.com/current?access_key=${process.env.WEATHERSTACK_API_KEY}&query=${city}`)
-
-    // replaced params with manual URL
     const { data } = await axios.get<WeatherstackResponse>(
       `http://api.weatherstack.com/current?access_key=${process.env.WEATHERSTACK_API_KEY}&query=${city}`
     )
-
-    console.log('Weatherstack response:', JSON.stringify(data))
 
     if ('error' in data) {
       res.status(400).json({ error: data.error.info })
@@ -260,9 +248,6 @@ app.get('/api/weather/forecast', ipRestriction, weatherLimiter, async (req: Requ
       }
     )
 
-    // group the 3-hour entries by calendar day, and pick the entry closest
-    // to midday as the representative icon/description for that day while
-    // taking min/max temps across every entry seen that day
     const dayMap = new Map<string, { minTemp: number; maxTemp: number; entry: OpenWeatherForecastEntry }>()
 
     for (const item of data.list) {
@@ -514,14 +499,14 @@ app.delete(
   }
 )
 
-const PORT = Number(process.env.PORT) || 5000
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
-
-// TEMPORARY — for testing only
-app.get('/api/test-cron', async (req, res) => {
+// Test cron manually
+app.get('/api/test-cron', async (_req: Request, res: Response) => {
   const { checkAlerts } = await import('./cron/checkAlerts.js')
   await checkAlerts()
   res.json({ success: true })
+})
+
+const PORT = Number(process.env.PORT) || 5000
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`)
 })
