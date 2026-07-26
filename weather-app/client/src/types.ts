@@ -5,6 +5,25 @@ export interface City {
   lat: number
   lon: number
   addedAt?: number
+<<<<<<< HEAD
+=======
+}
+
+export interface FavoriteCity {
+  id: string
+  user_id: string
+  city_name: string
+  country: string
+  lat: number
+  lon: number
+  added_at: string
+}
+
+export interface AuthUser {
+  id: string
+  email: string
+  username: string
+>>>>>>> main
 }
 
 
