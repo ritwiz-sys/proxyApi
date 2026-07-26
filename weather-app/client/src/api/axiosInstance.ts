@@ -1,4 +1,5 @@
-import axios from 'axios'
+
+import axios from "axios"
 
 export const AUTH_TOKEN_KEY = 'weather_auth_token'
 
