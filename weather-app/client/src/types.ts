@@ -4,11 +4,18 @@ export interface City {
   country: string
   lat: number
   lon: number
-  addedAt?: number  // ← add this
+  addedAt?: number
 }
 
-export interface FavoriteCity extends City {
-  addedAt: number
+
+export interface FavoriteCity {
+  id: string
+  user_id: string
+  city_name: string
+  country: string
+  lat: number
+  lon: number
+  added_at: string
 }
 
 export interface AuthUser {
