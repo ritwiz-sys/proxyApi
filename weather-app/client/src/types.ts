@@ -7,7 +7,6 @@ export interface City {
   addedAt?: number
 }
 
-
 export interface FavoriteCity {
   id: string
   user_id: string
@@ -19,6 +18,12 @@ export interface FavoriteCity {
 }
 
 export interface AuthUser {
+  id: string
+  email: string
+  username: string
+}
+
+export interface User {
   id: string
   email: string
   username: string
@@ -78,10 +83,4 @@ export interface Alert {
   is_active: boolean
   last_checked: string | null
   created_at: string
-}
-
-export interface User {
-  id: string
-  email: string
-  username: string
 }
